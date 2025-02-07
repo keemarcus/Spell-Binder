@@ -10,6 +10,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="todos/[id]" />
           <Stack.Screen name="card" />
+          <Stack.Screen name="deck" />
         </Stack>
       </SafeAreaProvider>
     </ThemeProvider>

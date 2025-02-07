@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import { View, Text, StyleSheet, Pressable, TextInput, Image } from 'react-native'
+import { View, ScrollView, Text, StyleSheet, Pressable, TextInput, Image } from 'react-native'
 
 import { useState, useEffect, useContext } from 'react'
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,6 +9,7 @@ import { Inter_500Medium, useFonts } from "@expo-google-fonts/inter";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+
 
 export default function EditScreen() {
     const { id } = useLocalSearchParams()
@@ -20,10 +21,12 @@ export default function EditScreen() {
     var [cardName, setCardName] = useState("");
     var [cardText, setCardText] = useState("");
     var [cardImage, setCardImage] = useState("");
+    var [cards, setCards] = useState([]);
 
     const [loaded, error] = useFonts({
         Inter_500Medium,
     })
+
 
     if (!loaded && !error) {
         return null
@@ -52,22 +55,46 @@ export default function EditScreen() {
         }
     }
 
-    const findCard = async () => {
-        //var url = "https://api.magicthegathering.io/v1/cards/?name=" + searchCard
-        var url = "https://api.scryfall.com/cards/named?fuzzy=" + searchCard
+    const findDeck = async () => {
+        var url = "http://127.0.0.1:5000/user/1/deck/test"
         try {
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`Response status: ${response.status}`);
             }
 
-            const card = await response.json();
-            console.log(card);
+            const deck = await response.json();
+            console.log(deck);
 
-            console.log(card['name']);
-            setCardName(card['name']);
-            setCardText(card['oracle_text']);
-            setCardImage(card['image_uris']['large']);
+            for(var card of deck['deck_json']){
+                const cardDetails = await findCard(card['card_name'])
+                setCards(cards => [...cards, 
+                    <Text style={styles.text} key={cards.length + "-name"}>{card['quantity'] + "x " + card['card_name']}</Text>,
+                    <Image
+                        key={cards.length + "-image"}
+                        style={styles.cardImage}
+                        source={{ uri: cardDetails['image_uris']['large'] }}
+                    />,
+                    <Text style={styles.text} key={cards.length + "-text"}>{cardDetails['oracle_text']}</Text>,
+                    <Text key={cards.length + "-blank"}>{"\n"}</Text>
+                    ]);
+            }
+            
+            
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    const findCard = async (cardName) => {
+        //var url = "https://api.magicthegathering.io/v1/cards/?name=" + searchCard
+        var url = "https://api.scryfall.com/cards/named?fuzzy=" + cardName
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Response status: ${response.status}`);
+            }
+            return await response.json();
         } catch (e) {
             console.error(e)
         }
@@ -95,7 +122,7 @@ export default function EditScreen() {
             <View style={styles.inputContainer}>
                 <Pressable
                     //onPress={handleSave}
-                    onPress={findCard}
+                    onPress={findDeck}
                     style={styles.saveButton}
                 >
                     <Text style={styles.saveButtonText}>Search</Text>
@@ -107,14 +134,15 @@ export default function EditScreen() {
                     <Text style={[styles.saveButtonText, { color: 'white' }]}>Cancel</Text>
                 </Pressable>
             </View>
-            <View style={{width:'100%'}}>
+            <ScrollView style={{ width: '100%' }}>
+                {cards}
                 <Text style={styles.text}>{cardName}</Text>
                 <Image
                     style={styles.cardImage}
                     source={{ uri: cardImage }}
                 />
                 <Text style={styles.text}>{cardText}</Text>
-            </View>
+            </ScrollView>
             <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         </SafeAreaView>
     )
@@ -158,14 +186,14 @@ function createStyles(theme, colorScheme) {
             fontSize: 18,
             color: colorScheme === 'dark' ? 'black' : 'white',
         },
-        cardImage:{
-            width: '80%', 
+        cardImage: {
+            width: '80%',
             //alignContent: 'center',
-            aspectRatio: 2.5/3.5,
+            aspectRatio: 2.5 / 3.5,
             alignSelf: 'center',
             //alignItems: 'center',
-        }, text:{
-            width: '80%', 
+        }, text: {
+            width: '80%',
         }
     })
 }
