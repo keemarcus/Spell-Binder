@@ -66,21 +66,24 @@ export default function EditScreen() {
             const deck = await response.json();
             console.log(deck);
 
-            for(var card of deck['deck_json']){
+            for (var card of deck['deck_json']) {
                 const cardDetails = await findCard(card['card_name'])
-                setCards(cards => [...cards, 
-                    <Text style={styles.text} key={cards.length + "-name"}>{card['quantity'] + "x " + card['card_name']}</Text>,
+                setCards(cards => [...cards,
+                <Text style={styles.cardHeader} key={cards.length + "-name"}>{card['quantity'] + "x " + card['card_name']}</Text>,
+                <View style={{ flexDirection: "row", width: '95%', alignSelf: 'center' }} key={cards.length + "-wrapper"}>
                     <Image
                         key={cards.length + "-image"}
                         style={styles.cardImage}
                         source={{ uri: cardDetails['image_uris']['large'] }}
-                    />,
-                    <Text style={styles.text} key={cards.length + "-text"}>{cardDetails['oracle_text']}</Text>,
+                        //source={{ uri: cardDetails['image_uris']['art_crop'] }}
+                    />
+                    <Text style={styles.cardText} key={cards.length + "-text"}>{cardDetails['oracle_text']}</Text>
                     <Text key={cards.length + "-blank"}>{"\n"}</Text>
-                    ]);
+                </View>
+                ]);
             }
-            
-            
+
+
         } catch (e) {
             console.error(e)
         }
@@ -187,13 +190,19 @@ function createStyles(theme, colorScheme) {
             color: colorScheme === 'dark' ? 'black' : 'white',
         },
         cardImage: {
-            width: '80%',
+            width: '40%',
             //alignContent: 'center',
             aspectRatio: 2.5 / 3.5,
-            alignSelf: 'center',
+            //aspectRatio: 626 / 457,
+            alignSelf: 'left',
             //alignItems: 'center',
         }, text: {
             width: '80%',
+        }, cardHeader: {
+            textAlign: 'center',
+        }, cardText: {
+            //width: '95%',
+            paddingLeft: '1%'
         }
     })
 }
