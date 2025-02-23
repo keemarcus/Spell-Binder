@@ -56,6 +56,9 @@ export default function EditScreen() {
     }
 
     const findDeck = async () => {
+        // clear out any existing deck info first
+        setCards([]);
+
         var url = "http://127.0.0.1:5000/user/1/deck/test"
         try {
             const response = await fetch(url);
@@ -64,33 +67,55 @@ export default function EditScreen() {
             }
 
             const deck = await response.json();
-            console.log(deck);
+            //console.log(deck);
 
             for (var card of deck['deck_json']) {
                 const cardDetails = await findCard(card['card_name'])
-                setCards(cards => [...cards,
-                <Text style={styles.cardHeader} key={cards.length + "-name"}>{card['quantity'] + "x " + card['card_name']}</Text>,
-                <View style={{ flexDirection: "row", width: '95%', alignSelf: 'center' }} key={cards.length + "-wrapper"}>
-                    <Image
-                        key={cards.length + "-image"}
-                        style={styles.cardImage}
-                        source={{ uri: cardDetails['image_uris']['large'] }}
-                        //source={{ uri: cardDetails['image_uris']['art_crop'] }}
-                    />
-                    <Text style={styles.cardText} key={cards.length + "-text"}>{cardDetails['oracle_text']}</Text>
-                    <Text key={cards.length + "-blank"}>{"\n"}</Text>
-                </View>
-                ]);
+                if(cardDetails['power']){
+                    setCards(cards => [...cards,
+                        <Text style={styles.cardHeader} key={cards.length + "-name"}>{card['quantity'] + "x " + cardDetails['name']}</Text>,
+                        <View style={{ flexDirection: "row", width: '95%', alignSelf: 'center' }} key={cards.length + "-wrapper"}>
+                            <Image
+                                key={cards.length + "-image"}
+                                style={styles.cardImage}
+                                source={{ uri: cardDetails['image_uris']['art_crop'] }}
+                                resizeMode={"stretch"}
+                            />
+                            <View style={{ flexDirection: "column", width: '95%', alignSelf: 'top' }} key={cards.length + "-info-wrapper"}>
+                                <Text style={styles.cardInfoText} key={cards.length + "-mana"}>{cardDetails['mana_cost']}</Text>
+                                <Text style={styles.cardInfoText} key={cards.length + "-type"}>{cardDetails['type_line']}</Text>
+                                <Text style={styles.cardInfoText} key={cards.length + "-power"}>{cardDetails['power'] + "/" + cardDetails['toughness']}</Text>
+                            </View>
+                        </View>,
+                        <Text style={styles.cardText} key={cards.length + "-text"}>{cardDetails['oracle_text']}</Text>,
+                        <Text key={cards.length + "-blank"}>{"\n"}</Text>
+                        ]);
+                }else{
+                    setCards(cards => [...cards,
+                        <Text style={styles.cardHeader} key={cards.length + "-name"}>{card['quantity'] + "x " + card['card_name']}</Text>,
+                        <View style={{ flexDirection: "row", width: '95%', alignSelf: 'center' }} key={cards.length + "-wrapper"}>
+                            <Image
+                                key={cards.length + "-image"}
+                                style={styles.cardImage}
+                                source={{ uri: cardDetails['image_uris']['art_crop'] }}
+                                resizeMode={"stretch"}
+                            />
+                            <View style={{ flexDirection: "column", width: '95%', alignSelf: 'top' }} key={cards.length + "-info-wrapper"}>
+                                <Text style={styles.cardInfoText} key={cards.length + "-mana"}>{cardDetails['mana_cost']}</Text>
+                                <Text style={styles.cardInfoText} key={cards.length + "-type"}>{cardDetails['type_line']}</Text>
+                            </View>
+                        </View>,
+                        <Text style={styles.cardText} key={cards.length + "-text"}>{cardDetails['oracle_text']}</Text>,
+                        <Text key={cards.length + "-blank"}>{"\n"}</Text>
+                        ]);
+                }
             }
-
-
         } catch (e) {
             console.error(e)
         }
     }
 
     const findCard = async (cardName) => {
-        //var url = "https://api.magicthegathering.io/v1/cards/?name=" + searchCard
         var url = "https://api.scryfall.com/cards/named?fuzzy=" + cardName
         try {
             const response = await fetch(url);
@@ -139,12 +164,6 @@ export default function EditScreen() {
             </View>
             <ScrollView style={{ width: '100%' }}>
                 {cards}
-                <Text style={styles.text}>{cardName}</Text>
-                <Image
-                    style={styles.cardImage}
-                    source={{ uri: cardImage }}
-                />
-                <Text style={styles.text}>{cardText}</Text>
             </ScrollView>
             <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         </SafeAreaView>
@@ -190,19 +209,28 @@ function createStyles(theme, colorScheme) {
             color: colorScheme === 'dark' ? 'black' : 'white',
         },
         cardImage: {
-            width: '40%',
-            //alignContent: 'center',
-            aspectRatio: 2.5 / 3.5,
-            //aspectRatio: 626 / 457,
+            width: 626 / 4,
+            height: 457 / 4,
             alignSelf: 'left',
-            //alignItems: 'center',
-        }, text: {
+            borderWidth: 2,
+            borderRadius: 5,
+        },
+        text: {
             width: '80%',
-        }, cardHeader: {
-            textAlign: 'center',
-        }, cardText: {
-            //width: '95%',
-            paddingLeft: '1%'
+        },
+        cardHeader: {
+            paddingLeft: '3%',
+            textAlign: 'left',
+            fontSize: 20,
+        },
+        cardText: {
+            paddingLeft: '3%'
+        },
+        cardInfoText: {
+            paddingLeft: '1%',
+            paddingRight: '5%',
+            //flexWrap: 'wrap',
+            fontSize: 20,
         }
     })
 }
